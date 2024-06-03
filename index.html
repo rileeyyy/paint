@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>paint</title>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; }
+        canvas { border: 1px solid #000; }
+        #controls { position: absolute; top: 10px; left: 10px; }
+        .tool { margin-right: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <canvas id="paintCanvas" width="800" height="1000"></canvas>
+    <div id="controls">
+        <div class="tool" id="brushTool">Brush</div>
+        <input type="color" id="colorPicker" value="#000000">
+        <input type="number" id="thickness" min="1" max="50" value="1">
+       <h4>made by riley</h4>
+    </div>
+    <script>
+        var canvas = document.getElementById('paintCanvas');
+        var context = canvas.getContext('2d');
+       
+        var isPainting = false;
+        var lastX, lastY;
+        context.lineCap = 'round';
+        
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseup', handleMouseUp);
+        
+
+        var colorPicker = document.getElementById('colorPicker');
+        var thicknessInput = document.getElementById('thickness');
+        var brushTool = document.getElementById('brushTool');
+        var currentTool = 'brush';
+        brushTool.style.fontWeight = 'bold';
+        brushTool.addEventListener('click', function() {
+            currentTool = 'brush';
+            brushTool.style.fontWeight = 'bold';
+        });
+        
+        // Functions to handle painting
+        function handleMouseDown(event) {
+            if (currentTool === 'brush') {
+                isPainting = true;
+                draw(event); 
+            }
+        }
+        
+        function handleMouseMove(event) {
+            if (currentTool === 'brush' && isPainting) {
+                draw(event);
+            }
+        }
+        
+        function handleMouseUp(event) {
+            if (currentTool === 'brush') {
+                isPainting = false;
+                lastX = undefined;
+                lastY = undefined;
+            }
+        }
+        
+        function draw(event) {
+            context.strokeStyle = colorPicker.value;
+            context.lineWidth = thicknessInput.value;
+            var rect = canvas.getBoundingClientRect();
+            var x = event.clientX - rect.left;
+            var y = event.clientY - rect.top;
+            if (lastX && lastY) {
+                context.beginPath();
+                context.moveTo(lastX, lastY);
+                context.lineTo(x, y);
+                context.stroke();
+            }
+            lastX = x;
+            lastY = y;
+        }
+    </script>
+</body>
+</html>
+
