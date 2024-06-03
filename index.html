@@ -17,7 +17,9 @@
         <div class="tool" id="brushTool">Brush</div>
         <input type="color" id="colorPicker" value="#000000">
         <input type="number" id="thickness" min="1" max="50" value="1">
-       <h4>made by riley</h4>
+        <button id="eraseButton">Erase</button>
+        <button id="undoButton">Undo</button>
+        <h4>made by riley</h4>
     </div>
     <script>
         var canvas = document.getElementById('paintCanvas');
@@ -26,38 +28,45 @@
         var isPainting = false;
         var lastX, lastY;
         context.lineCap = 'round';
-        
+        var strokes = [];
+
         canvas.addEventListener('mousedown', handleMouseDown);
         canvas.addEventListener('mousemove', handleMouseMove);
         canvas.addEventListener('mouseup', handleMouseUp);
-        
 
         var colorPicker = document.getElementById('colorPicker');
         var thicknessInput = document.getElementById('thickness');
         var brushTool = document.getElementById('brushTool');
+        var eraseButton = document.getElementById('eraseButton');
+        var undoButton = document.getElementById('undoButton');
         var currentTool = 'brush';
         brushTool.style.fontWeight = 'bold';
         brushTool.addEventListener('click', function() {
             currentTool = 'brush';
             brushTool.style.fontWeight = 'bold';
         });
+        eraseButton.addEventListener('click', function() {
+            currentTool = 'erase';
+        });
+        undoButton.addEventListener('click', function() {
+            undo();
+        });
         
-        // Functions to handle painting
         function handleMouseDown(event) {
-            if (currentTool === 'brush') {
+            if (currentTool === 'brush' || currentTool === 'erase') {
                 isPainting = true;
                 draw(event); 
             }
         }
         
         function handleMouseMove(event) {
-            if (currentTool === 'brush' && isPainting) {
+            if ((currentTool === 'brush' || currentTool === 'erase') && isPainting) {
                 draw(event);
             }
         }
         
         function handleMouseUp(event) {
-            if (currentTool === 'brush') {
+            if (currentTool === 'brush' || currentTool === 'erase') {
                 isPainting = false;
                 lastX = undefined;
                 lastY = undefined;
@@ -65,19 +74,50 @@
         }
         
         function draw(event) {
-            context.strokeStyle = colorPicker.value;
             context.lineWidth = thicknessInput.value;
             var rect = canvas.getBoundingClientRect();
             var x = event.clientX - rect.left;
             var y = event.clientY - rect.top;
             if (lastX && lastY) {
+                if (currentTool === 'brush') {
+                    context.strokeStyle = colorPicker.value;
+                } else if (currentTool === 'erase') {
+                    context.strokeStyle = '#ffffff';
+                }
                 context.beginPath();
                 context.moveTo(lastX, lastY);
                 context.lineTo(x, y);
                 context.stroke();
+                strokes.push({
+                    x1: lastX,
+                    y1: lastY,
+                    x2: x,
+                    y2: y,
+                    color: context.strokeStyle,
+                    lineWidth: context.lineWidth
+                });
             }
             lastX = x;
             lastY = y;
+        }
+        
+        function undo() {
+            if (strokes.length > 0) {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                strokes.pop();
+                redraw();
+            }
+        }
+        
+        function redraw() {
+            strokes.forEach(function(stroke) {
+                context.strokeStyle = stroke.color;
+                context.lineWidth = stroke.lineWidth;
+                context.beginPath();
+                context.moveTo(stroke.x1, stroke.y1);
+                context.lineTo(stroke.x2, stroke.y2);
+                context.stroke();
+            });
         }
     </script>
 </body>
