@@ -14,11 +14,11 @@
 <body>
     <canvas id="paintCanvas" width="800" height="1000"></canvas>
     <div id="controls">
-        <div class="tool" id="brushTool">Brush</div>
+        <div class="tool" id="brushTool">brush</div>
+        <div class="tool" id="eraseTool">erase</div>
         <input type="color" id="colorPicker" value="#000000">
         <input type="number" id="thickness" min="1" max="50" value="1">
-        <button id="eraseButton">Erase</button>
-        <button id="undoButton">Undo</button>
+        <button id="undoButton">undo</button>
         <h4>made by riley</h4>
     </div>
     <script>
@@ -37,16 +37,19 @@
         var colorPicker = document.getElementById('colorPicker');
         var thicknessInput = document.getElementById('thickness');
         var brushTool = document.getElementById('brushTool');
-        var eraseButton = document.getElementById('eraseButton');
+        var eraseTool = document.getElementById('eraseTool');
         var undoButton = document.getElementById('undoButton');
         var currentTool = 'brush';
         brushTool.style.fontWeight = 'bold';
         brushTool.addEventListener('click', function() {
             currentTool = 'brush';
             brushTool.style.fontWeight = 'bold';
+            eraseTool.style.fontWeight = 'normal';
         });
-        eraseButton.addEventListener('click', function() {
+        eraseTool.addEventListener('click', function() {
             currentTool = 'erase';
+            eraseTool.style.fontWeight = 'bold';
+            brushTool.style.fontWeight = 'normal';
         });
         undoButton.addEventListener('click', function() {
             undo();
