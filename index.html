@@ -7,18 +7,21 @@
     <style>
         body { margin: 0; padding: 0; overflow: hidden; }
         canvas { border: 1px solid #000; }
-        #controls { position: absolute; top: 10px; left: 10px; }
+        #controls { position: absolute; top: 10px; right: 10px; }
         .tool { margin-right: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
     <canvas id="paintCanvas" width="800" height="1000"></canvas>
     <div id="controls">
+        <input type="file" id="importButton" accept="image/png">
+        <button id="exportButton">export</button>
+        <button id="undoButton">undo</button>
+        <button id="redoButton">redo</button>
         <div class="tool" id="brushTool">brush</div>
         <div class="tool" id="eraseTool">erase</div>
         <input type="color" id="colorPicker" value="#000000">
         <input type="number" id="thickness" min="1" max="50" value="1">
-        <button id="undoButton">undo</button>
         <h4>made by riley</h4>
     </div>
     <script>
@@ -29,6 +32,7 @@
         var lastX, lastY;
         context.lineCap = 'round';
         var strokes = [];
+        var undoneStrokes = [];
 
         canvas.addEventListener('mousedown', handleMouseDown);
         canvas.addEventListener('mousemove', handleMouseMove);
@@ -39,6 +43,9 @@
         var brushTool = document.getElementById('brushTool');
         var eraseTool = document.getElementById('eraseTool');
         var undoButton = document.getElementById('undoButton');
+        var redoButton = document.getElementById('redoButton');
+        var importButton = document.getElementById('importButton');
+        var exportButton = document.getElementById('exportButton');
         var currentTool = 'brush';
         brushTool.style.fontWeight = 'bold';
         brushTool.addEventListener('click', function() {
@@ -53,6 +60,15 @@
         });
         undoButton.addEventListener('click', function() {
             undo();
+        });
+        redoButton.addEventListener('click', function() {
+            redo();
+        });
+        importButton.addEventListener('change', function(e) {
+            importFile(e.target.files[0]);
+        });
+        exportButton.addEventListener('click', function() {
+            exportFile();
         });
         
         function handleMouseDown(event) {
@@ -106,13 +122,22 @@
         
         function undo() {
             if (strokes.length > 0) {
-                context.clearRect(0, 0, canvas.width, canvas.height);
-                strokes.pop();
+                var lastStroke = strokes.pop();
+                undoneStrokes.push(lastStroke);
+                redraw();
+            }
+        }
+        
+        function redo() {
+            if (undoneStrokes.length > 0) {
+                var lastUndoneStroke = undoneStrokes.pop();
+                strokes.push(lastUndoneStroke);
                 redraw();
             }
         }
         
         function redraw() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
             strokes.forEach(function(stroke) {
                 context.strokeStyle = stroke.color;
                 context.lineWidth = stroke.lineWidth;
@@ -122,7 +147,28 @@
                 context.stroke();
             });
         }
+
+        function importFile(file) {
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                var img = new Image();
+                img.onload = function() {
+                    context.drawImage(img, 0, 0);
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function exportFile() {
+            var dataURL = canvas.toDataURL("image/png");
+            var a = document.createElement('a');
+            a.href = dataURL;
+            a.download = 'painting.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
     </script>
 </body>
 </html>
-
