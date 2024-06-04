@@ -5,24 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>paint</title>
     <style>
-        body { margin: 0; padding: 0; overflow: hidden; font-family: helvetica;}
-        canvas { border: 1px solid #000; }
-        #controls { position: absolute; top: 10px; right: 10px; }
+        body { margin: 0; padding: 0; overflow: hidden; font-family: helvetica; background: rgb(2,0,36); background: linear-gradient(0deg, rgba(2,0,36,1) 0%, rgba(66,1,131,1) 100%);
+       text-shadow: 
+     -1px -1px 0 blue,
+      1px -1px 0 blue,
+     -1px 1px 0 blue,       
+      1px 1px 0 blue; 
+       }
+        canvas { border: 1px solid #000; background-color: #ffffff;}
+        #controls { position: absolute; top: 10px; right: 10px;}
         .tool { margin-right: 10px; cursor: pointer; }
+        .btn { background-color: #00248E; color: white; border-radius: 50%; border: none; outline-style: solid; outline-color: black; outline-width: 1px; }
     </style>
 </head>
 <body>
     <div class="container">
         <canvas id="paintCanvas" width="800" height="1000"></canvas>
         <div id="controls">
-            <input type="file" id="importButton" accept="image/png">
-            <button id="exportButton">export</button>
-            <button id="undoButton">undo</button>
-            <button id="redoButton">redo</button>
+            <input type="file" id="importButton" accept="image/png"  style="color: white;">
+            <button id="exportButton" class="btn">export</button>
+            <button id="undoButton" class="btn">undo</button>
+            <button id="redoButton" class="btn">redo</button>
             <div class="tool" id="brushTool">brush</div>
             <div class="tool" id="eraseTool">erase</div>
             <input type="color" id="colorPicker" value="#000000">
-            <input type="number" id="thickness" min="1" max="50" value="1">
+            <input type="number" id="thickness" min="1" max="50" value="1" style="background-color: #C2C2C2;">
             <h4>made by riley</h4>
         </div>
     </div>
