@@ -1,202 +1,256 @@
 <!DOCTYPE html>
 <html lang="en">
-   <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>paint</title>
-      <style>
-         body {
-         margin: 0;
-         padding: 0;
-         overflow: hidden;
-         font-family: helvetica;
-         background: rgb(2,0,36);
-         background: linear-gradient(0deg, rgba(2,0,36,1) 0%, rgba(66,1,131,1) 100%);
-         text-shadow: -1px -1px 0 blue, 1px -1px 0 blue, -1px 1px 0 blue, 1px 1px 0 blue;
-         }
-         canvas {
-         border: 1px solid #000;
-         background-color: #ffffff;
-         }
-         #controls {
-         position: absolute;
-         top: 10px;
-         right: 10px;
-         }
-         .tool {
-         margin-right: 10px;
-         cursor: pointer;
-         }
-         .btn {
-         background-color: #00248E;
-         color: white;
-         border-radius: 50%;
-         border: none;
-         outline-style: solid;
-         outline-color: black;
-         outline-width: 1px;
-         }
-      </style>
-   </head>
-   <body>
-      <div class="container">
-         <canvas id="paintCanvas" width="800" height="1000"></canvas>
-         <div id="controls">
-            <input type="file" id="importButton" accept="image/png" style="color: white;">
-            <button id="exportButton" class="btn">export</button>
-            <button id="undoButton" class="btn">undo</button>
-            <button id="redoButton" class="btn">redo</button>
-            <button id="clearButton" onclick="reload()" class="btn">clear</button>
-            <div class="tool" id="brushTool">brush</div>
-            <div class="tool" id="eraseTool">erase</div>
-            <div class="tool" id="pencilTool">pencil</div>
-            <input type="color" id="colorPicker" value="#000000">
-            <input type="number" id="thickness" min="1" max="50" value="1" style="background-color: #C2C2C2;">
-            <h4>a website by <a style="text-decoration: none;" href="https://rileeyyy.github.io">riley</a></h4>
-         </div>
-      </div>
-      <script>
-         var canvas = document.getElementById('paintCanvas');
-         var context = canvas.getContext('2d');
-         var isPainting = false;
-         var lastX, lastY;
-         context.lineCap = 'round';
-         var strokes = [];
-         var undoneStrokes = [];
-         canvas.addEventListener('mousedown', handleMouseDown);
-         canvas.addEventListener('mousemove', handleMouseMove);
-         canvas.addEventListener('mouseup', handleMouseUp);
-         var colorPicker = document.getElementById('colorPicker');
-         var thicknessInput = document.getElementById('thickness');
-         var brushTool = document.getElementById('brushTool');
-         var eraseTool = document.getElementById('eraseTool');
-         var undoButton = document.getElementById('undoButton');
-         var redoButton = document.getElementById('redoButton');
-         var importButton = document.getElementById('importButton');
-         var exportButton = document.getElementById('exportButton');
-         var pencilTool = document.getElementById('pencilTool');
-         var currentTool = 'brush';
-         brushTool.style.fontWeight = 'bold';
-         brushTool.addEventListener('click', function() {
-           currentTool = 'brush';
-           brushTool.style.fontWeight = 'bold';
-           eraseTool.style.fontWeight = 'normal';
-           pencilTool.style.fontWeight = 'normal';
-         });
-         eraseTool.addEventListener('click', function() {
-           currentTool = 'erase';
-           eraseTool.style.fontWeight = 'bold';
-           brushTool.style.fontWeight = 'normal';
-           pencilTool.style.fontWeight = 'normal';
-         });
-         pencilTool.addEventListener('click', function() {
-           currentTool = 'pencil';
-           pencilTool.style.fontWeight = 'bold';
-           brushTool.style.fontWeight = 'normal';
-           eraseTool.style.fontWeight = 'normal';
-         });
-         undoButton.addEventListener('click', function() {
-           undo();
-         });
-         redoButton.addEventListener('click', function() {
-           redo();
-         });
-         importButton.addEventListener('change', function(e) {
-           importFile(e.target.files[0]);
-         });
-         exportButton.addEventListener('click', function() {
-           exportFile();
-         });
-         function handleMouseDown(event) {
-           if (currentTool === 'brush' || currentTool === 'erase' || currentTool === 'pencil') {
-             isPainting = true;
-             draw(event);
-           }
-         }
-         function handleMouseMove(event) {
-           if ((currentTool === 'brush' || currentTool === 'erase' || currentTool === 'pencil') && isPainting) {
-             draw(event);
-           }
-         }
-         function handleMouseUp(event) {
-           if (currentTool === 'brush' || currentTool === 'erase' || currentTool === 'pencil') {
-             isPainting = false;
-             lastX = undefined;
-             lastY = undefined;
-           }
-         }
-         function draw(event) {
-           context.lineWidth = thicknessInput.value;
-           var rect = canvas.getBoundingClientRect();
-           var x = event.clientX - rect.left;
-           var y = event.clientY - rect.top;
-           if (lastX && lastY) {
-             if (currentTool === 'brush') {
-               context.strokeStyle = colorPicker.value;
-             } else if (currentTool === 'erase') {
-               context.strokeStyle = '#ffffff';
-             } else if (currentTool === 'pencil') {
-               context.strokeStyle = '#000000';
-               context.lineWidth = 1;
-             }
-             context.beginPath();
-             context.moveTo(lastX, lastY);
-             context.lineTo(x, y);
-             context.stroke();
-             strokes.push({ x1: lastX, y1: lastY, x2: x, y2: y, color: context.strokeStyle, lineWidth: context.lineWidth });
-           }
-           lastX = x;
-           lastY = y;
-         }
-         function undo() {
-           if (strokes.length > 0) {
-             var lastStroke = strokes.pop();
-             undoneStrokes.push(lastStroke);
-             redraw();
-           }
-         }
-         function redo() {
-           if (undoneStrokes.length > 0) {
-             var lastUndoneStroke = undoneStrokes.pop();
-             strokes.push(lastUndoneStroke);
-             redraw();
-           }
-         }
-         function redraw() {
-           context.clearRect(0, 0, canvas.width, canvas.height);
-           strokes.forEach(function(stroke) {
-             context.strokeStyle = stroke.color;
-             context.lineWidth = stroke.lineWidth;
-             context.beginPath();
-             context.moveTo(stroke.x1, stroke.y1);
-             context.lineTo(stroke.x2, stroke.y2);
-             context.stroke();
-           });
-         }
-         function importFile(file) {
-           var reader = new FileReader();
-           reader.onload = function(event) {
-             var img = new Image();
-             img.onload = function() {
-               context.drawImage(img, 0, 0);
-             };
-             img.src = event.target.result;
-           };
-           reader.readAsDataURL(file);
-         }
-         function exportFile() {
-           var dataURL = canvas.toDataURL("image/png");
-           var a = document.createElement('a');
-           a.href = dataURL;
-           a.download = 'painting.png';
-           document.body.appendChild(a);
-           a.click();
-                     document.body.removeChild(a);
-                 }
-         function reload() {
-            window.location.reload();
-         }
-             
-      </script>
-   </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>paint</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: helvetica;
+            background: rgb(2,0,36);
+            background: linear-gradient(0deg, rgba(2,0,36,1) 0%, rgba(66,1,131,1) 100%);
+            text-shadow: -1px -1px 0 blue, 1px -1px 0 blue, -1px 1px 0 blue, 1px 1px 0 blue;
+        }
+        canvas {
+            border: 1px solid #000;
+            background-color: #ffffff;
+        }
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .tool {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        .btn {
+            background-color: #00248E;
+            color: white;
+            border-radius: 50%;
+            border: none;
+            outline-style: solid;
+            outline-color: black;
+            outline-width: 1px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <canvas id="paintCanvas" width="800" height="1000"></canvas>
+    <div id="controls">
+        <h1>paint</h1>
+        <br>
+        <input type="file" id="importButton" accept="image/png" style="color: white;">
+        <button id="exportButton" class="btn">export</button>
+        <button id="undoButton" class="btn">undo</button>
+        <button id="redoButton" class="btn">redo</button>
+        <button id="clearButton" class="btn">clear</button>
+        <div class="tool" id="brushTool">brush</div>
+        <div class="tool" id="eraseTool">erase</div>
+        <div class="tool" id="pencilTool">pencil</div>
+        <div class="tool" id="textTool">text</div>
+        <input type="color" id="colorPicker" value="#000000">
+        <input type="number" id="thickness" min="1" max="50" value="1" style="background-color: #C2C2C2;">
+        <h4>a website by <a style="text-decoration: none;" href="https://rileeyyy.github.io">riley</a></h4>
+    </div>
+</div>
+<script>
+    var canvas = document.getElementById('paintCanvas');
+    var context = canvas.getContext('2d');
+    var isPainting = false;
+    var lastX, lastY;
+    var strokes = [];
+    var undoneStrokes = [];
+    var drawingText = false;
+    var textStartX, textStartY;
+    var textInput;
+
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseup', handleMouseUp);
+    canvas.addEventListener('dblclick', handleDoubleClick);
+
+    var colorPicker = document.getElementById('colorPicker');
+    var thicknessInput = document.getElementById('thickness');
+    var brushTool = document.getElementById('brushTool');
+    var eraseTool = document.getElementById('eraseTool');
+    var undoButton = document.getElementById('undoButton');
+    var redoButton = document.getElementById('redoButton');
+    var importButton = document.getElementById('importButton');
+    var exportButton = document.getElementById('exportButton');
+    var pencilTool = document.getElementById('pencilTool');
+    var textTool = document.getElementById('textTool');
+    var clearButton = document.getElementById('clearButton');
+    var currentTool = 'brush';
+
+    brushTool.style.fontWeight = 'bold';
+
+    brushTool.addEventListener('click', function() {
+        currentTool = 'brush';
+        brushTool.style.fontWeight = 'bold';
+        eraseTool.style.fontWeight = 'normal';
+        pencilTool.style.fontWeight = 'normal';
+        textTool.style.fontWeight = 'normal';
+    });
+
+    eraseTool.addEventListener('click', function() {
+        currentTool = 'erase';
+        eraseTool.style.fontWeight = 'bold';
+        brushTool.style.fontWeight = 'normal';
+        pencilTool.style.fontWeight = 'normal';
+        textTool.style.fontWeight = 'normal';
+    });
+
+    pencilTool.addEventListener('click', function() {
+        currentTool = 'pencil';
+        pencilTool.style.fontWeight = 'bold';
+        brushTool.style.fontWeight = 'normal';
+        eraseTool.style.fontWeight = 'normal';
+        textTool.style.fontWeight = 'normal';
+    });
+
+    textTool.addEventListener('click', function() {
+        currentTool = 'text';
+        textTool.style.fontWeight = 'bold';
+        brushTool.style.fontWeight = 'normal';
+        eraseTool.style.fontWeight = 'normal';
+        pencilTool.style.fontWeight = 'normal';
+    });
+
+    undoButton.addEventListener('click', function() {
+        undo();
+    });
+
+    redoButton.addEventListener('click', function() {
+        redo();
+    });
+
+    importButton.addEventListener('change', function(e) {
+        importFile(e.target.files[0]);
+    });
+
+    exportButton.addEventListener('click', function() {
+        exportFile();
+    });
+
+    clearButton.addEventListener('click', function() {
+        clearCanvas();
+    });
+
+    function handleMouseDown(event) {
+        isPainting = true;
+        lastX = event.clientX - canvas.offsetLeft;
+        lastY = event.clientY - canvas.offsetTop;
+    }
+
+    function handleMouseMove(event) {
+        if (isPainting) {
+            var x = event.clientX - canvas.offsetLeft;
+            var y = event.clientY - canvas.offsetTop;
+            draw(x, y);
+            lastX = x;
+            lastY = y;
+        }
+    }
+
+    function handleMouseUp(event) {
+        isPainting = false;
+    }
+
+    function handleDoubleClick(event) {
+        if (currentTool === 'text') {
+            textInput = prompt("enter text:");
+            if (textInput) {
+                drawText(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop, textInput);
+            }
+        }
+    }
+
+    function draw(x, y) {
+        context.lineWidth = (currentTool === 'pencil') ? 1 : thicknessInput.value;
+        context.lineJoin = 'round'; 
+        context.lineCap = 'round'; 
+        context.strokeStyle = (currentTool === 'erase') ? '#ffffff' : (currentTool === 'pencil') ? '#000000' : colorPicker.value;
+        if (currentTool === 'brush' || currentTool === 'pencil' || currentTool === 'erase') {
+            context.beginPath();
+            context.moveTo(lastX, lastY);
+            context.lineTo(x, y);
+            context.stroke();
+        }
+    }
+
+    function drawText(x, y, text) {
+        var tempCanvas = document.createElement('canvas');
+        var tempContext = tempCanvas.getContext('2d');
+        tempCanvas.width = context.measureText(text).width;
+        tempCanvas.height = parseInt(thicknessInput.value) * 2; 
+        tempContext.font = thicknessInput.value + 'px sans-serif';
+        tempContext.fillStyle = colorPicker.value;
+        tempContext.fillText(text, 0, thicknessInput.value);
+        context.drawImage(tempCanvas, x, y - parseInt(thicknessInput.value));
+    }
+
+    function undo() {
+        if (strokes.length > 0) {
+            var lastStroke = strokes.pop();
+            undoneStrokes.push(lastStroke);
+            redraw();
+        }
+    }
+
+    function redo() {
+        if (undoneStrokes.length > 0) {
+            var lastUndoneStroke = undoneStrokes.pop();
+            strokes.push(lastUndoneStroke);
+            redraw();
+        }
+    }
+
+    function redraw() {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        strokes.forEach(function(stroke) {
+            context.strokeStyle = stroke.color;
+            context.lineWidth = stroke.lineWidth;
+            context.beginPath();
+            context.moveTo(stroke.x1, stroke.y1);
+            context.lineTo(stroke.x2, stroke.y2);
+            context.stroke();
+        });
+    }
+
+    function importFile(file) {
+        var reader = new FileReader();
+        reader.onload = function(event) {
+            var img = new Image();
+            img.onload = function() {
+                context.drawImage(img, 0, 0);
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function exportFile() {
+        var dataURL = canvas.toDataURL("image/png");
+        var a = document.createElement('a');
+        a.href = dataURL;
+        a.download = 'painting.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function clearCanvas() {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        strokes = [];
+        undoneStrokes = [];
+    }
+
+</script>
+</body>
 </html>
+
