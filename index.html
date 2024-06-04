@@ -46,6 +46,7 @@
             <button id="exportButton" class="btn">export</button>
             <button id="undoButton" class="btn">undo</button>
             <button id="redoButton" class="btn">redo</button>
+            <button id="clearButton" onclick="reload()" class="btn">clear</button>
             <div class="tool" id="brushTool">brush</div>
             <div class="tool" id="eraseTool">erase</div>
             <div class="tool" id="pencilTool">pencil</div>
@@ -192,6 +193,9 @@
            a.click();
                      document.body.removeChild(a);
                  }
+         function reload() {
+            window.location.reload();
+         }
              
       </script>
    </body>
