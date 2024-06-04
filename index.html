@@ -5,26 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>paint</title>
     <style>
-        body { margin: 0; padding: 0; overflow: hidden; }
+        body { margin: 0; padding: 0; overflow: hidden; font-family: helvetica;}
         canvas { border: 1px solid #000; }
         #controls { position: absolute; top: 10px; right: 10px; }
         .tool { margin-right: 10px; cursor: pointer; }
     </style>
-     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
     <div class="container">
         <canvas id="paintCanvas" width="800" height="1000"></canvas>
-        <div id="controls" class="mt-3">
-            <input type="file" id="importButton" accept="image/png" class="mr-2">
-            <button id="exportButton" class="btn btn-primary mr-2">export</button>
-            <button id="undoButton" class="btn btn-secondary mr-2">undo</button>
-            <button id="redoButton" class="btn btn-secondary mr-2">redo</button>
+        <div id="controls">
+            <input type="file" id="importButton" accept="image/png">
+            <button id="exportButton">export</button>
+            <button id="undoButton">undo</button>
+            <button id="redoButton">redo</button>
             <div class="tool" id="brushTool">brush</div>
             <div class="tool" id="eraseTool">erase</div>
-            <input type="color" id="colorPicker" value="#000000" class="mr-2">
-            <input type="number" id="thickness" min="1" max="50" value="1" class="mr-2">
-            <h4 class="mt-3">made by riley</h4>
+            <input type="color" id="colorPicker" value="#000000">
+            <input type="number" id="thickness" min="1" max="50" value="1">
+            <h4>made by riley</h4>
         </div>
     </div>
     <script>
