@@ -27,15 +27,15 @@
             margin-right: 10px;
             cursor: pointer;
         }
-        .btn {
-            background-color: #00248E;
-            color: white;
-            border-radius: 50%;
-            border: none;
-            outline-style: solid;
-            outline-color: black;
-            outline-width: 1px;
-        }
+.btn {
+    background-color: #007bff;
+    color: white;
+    border-radius: 20px;
+    border: none;
+    outline: none;
+    padding: 8px 16px;
+}
+
     </style>
 </head>
 <body>
@@ -69,23 +69,105 @@
     var textStartX, textStartY;
     var textInput;
 
-    canvas.addEventListener('mousedown', handleMouseDown);
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseup', handleMouseUp);
-    canvas.addEventListener('dblclick', handleDoubleClick);
-
-    var colorPicker = document.getElementById('colorPicker');
-    var thicknessInput = document.getElementById('thickness');
-    var brushTool = document.getElementById('brushTool');
-    var eraseTool = document.getElementById('eraseTool');
-    var undoButton = document.getElementById('undoButton');
-    var redoButton = document.getElementById('redoButton');
-    var importButton = document.getElementById('importButton');
-    var exportButton = document.getElementById('exportButton');
-    var pencilTool = document.getElementById('pencilTool');
-    var textTool = document.getElementById('textTool');
-    var clearButton = document.getElementById('clearButton');
-    var currentTool = 'brush';
+    function FloodFillTool(cxt, preCxt) {
+        Tool.apply(this, arguments);
+    }
+    
+    FloodFillTool.prototype = Object.create(Tool.prototype);
+    FloodFillTool.prototype.constructor = FloodFillTool;
+    
+    FloodFillTool.prototype._fill = function (startX, startY) {
+        if (this._filling) {
+            return;
+        }
+        
+        this._filling = true;
+        
+        var pixelStack = [[startX, startY]];
+        
+        var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        var startColor = this._getColor(startX, startY, imageData);
+        
+        if (startColor.r === this._fillColor.r && startColor.g === this._fillColor.g && startColor.b === this._fillColor.b) {
+            this._filling = false;
+            return;
+        }
+        
+        while (pixelStack.length) {
+            var newPos, x, y, pixelPos, reachLeft, reachRight;
+            
+            newPos = pixelStack.pop();
+            x = newPos[0];
+            y = newPos[1];
+            
+            pixelPos = (y * canvas.width + x) * 4;
+            
+            while (y-- >= 0 && this._matchStartColor(pixelPos, startColor, imageData)) {
+                pixelPos -= canvas.width * 4;
+            }
+            
+            pixelPos += canvas.width * 4;
+            ++y;
+            reachLeft = false;
+            reachRight = false;
+            
+            while (y++ < canvas.height - 1 && this._matchStartColor(pixelPos, startColor, imageData)) {
+                this._colorPixel(pixelPos);
+                
+                if (x > 0) {
+                    if (this._matchStartColor(pixelPos - 4, startColor, imageData)) {
+                        if (!reachLeft) {
+                            pixelStack.push([x - 1, y]);
+                            reachLeft = true;
+                        }
+                    } else if (reachLeft) {
+                        reachLeft = false;
+                    }
+                }
+                
+                if (x < canvas.width - 1) {
+                    if (this._matchStartColor(pixelPos + 4, startColor, imageData)) {
+                        if (!reachRight) {
+                            pixelStack.push([x + 1, y]);
+                            reachRight = true;
+                        }
+                    } else if (reachRight) {
+                        reachRight = false;
+                    }
+                }
+                
+                pixelPos += canvas.width * 4;
+            }
+        }
+        
+        context.putImageData(imageData, 0, 0);
+        
+        this._filling = false;
+    };
+    
+    FloodFillTool.prototype._matchStartColor = function (pixelPos, startColor, imageData) {
+        var r = imageData.data[pixelPos];
+        var g = imageData.data[pixelPos + 1];
+        var b = imageData.data[pixelPos + 2];
+        
+        return r === startColor.r && g === startColor.g && b === startColor.b;
+    };
+    
+    FloodFillTool.prototype._colorPixel = function (pixelPos) {
+        context.fillStyle = 'rgb(' + this._fillColor.r + ', ' + this._fillColor.g + ', ' + this._fillColor.b + ')';
+        context.fillRect(pixelPos / 4 % canvas.width, Math.floor(pixelPos / 4 / canvas.width), 1, 1);
+    };
+    
+    FloodFillTool.prototype._getColor = function (x, y, imageData) {
+        var pixelPos = (y * imageData.width + x) * 4;
+        return {
+            r: imageData.data[pixelPos],
+            g: imageData.data[pixelPos + 1],
+            b: imageData.data[pixelPos + 2]
+        };
+    };
+    
+    var floodFillTool = new FloodFillTool(context);
 
     brushTool.style.fontWeight = 'bold';
 
@@ -250,7 +332,24 @@
         undoneStrokes = [];
     }
 
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseup', handleMouseUp);
+    canvas.addEventListener('dblclick', handleDoubleClick);
+
+    var colorPicker = document.getElementById('colorPicker');
+    var thicknessInput = document.getElementById('thickness');
+    var brushTool = document.getElementById('brushTool');
+    var eraseTool = document.getElementById('eraseTool');
+    var undoButton = document.getElementById('undoButton');
+    var redoButton = document.getElementById('redoButton');
+    var importButton = document.getElementById('importButton');
+    var exportButton = document.getElementById('exportButton');
+    var pencilTool = document.getElementById('pencilTool');
+    var textTool = document.getElementById('textTool');
+    var clearButton = document.getElementById('clearButton');
+    var currentTool = 'brush';
+
 </script>
 </body>
 </html>
-
