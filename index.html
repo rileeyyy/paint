@@ -21,21 +21,21 @@
         #controls {
             position: absolute;
             top: 10px;
-            right: 10px;
+            right: 220px;
+            display: inline-block;
         }
         .tool {
             margin-right: 10px;
             cursor: pointer;
         }
-.btn {
-    background-color: #007bff;
-    color: white;
-    border-radius: 20px;
-    border: none;
-    outline: none;
-    padding: 8px 16px;
-}
-
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border-radius: 20px;
+            border: none;
+            outline: none;
+            padding: 8px 16px;
+        }
     </style>
 </head>
 <body>
@@ -253,7 +253,7 @@
     }
 
     function draw(x, y) {
-        context.lineWidth = (currentTool === 'pencil') ? 1 : thicknessInput.value;
+        context.lineWidth = (currentTool === 'pencil') ? 1 : thickness.value;
         context.lineJoin = 'round'; 
         context.lineCap = 'round'; 
         context.strokeStyle = (currentTool === 'erase') ? '#ffffff' : (currentTool === 'pencil') ? '#000000' : colorPicker.value;
@@ -269,11 +269,11 @@
         var tempCanvas = document.createElement('canvas');
         var tempContext = tempCanvas.getContext('2d');
         tempCanvas.width = context.measureText(text).width;
-        tempCanvas.height = parseInt(thicknessInput.value) * 2; 
-        tempContext.font = thicknessInput.value + 'px sans-serif';
+        tempCanvas.height = parseInt(thickness.value) * 2; 
+        tempContext.font = thickness.value + 'px sans-serif';
         tempContext.fillStyle = colorPicker.value;
-        tempContext.fillText(text, 0, thicknessInput.value);
-        context.drawImage(tempCanvas, x, y - parseInt(thicknessInput.value));
+        tempContext.fillText(text, 0, thickness.value);
+        context.drawImage(tempCanvas, x, y - parseInt(thickness.value));
     }
 
     function undo() {
@@ -338,7 +338,7 @@
     canvas.addEventListener('dblclick', handleDoubleClick);
 
     var colorPicker = document.getElementById('colorPicker');
-    var thicknessInput = document.getElementById('thickness');
+    var thickness = document.getElementById('thickness');
     var brushTool = document.getElementById('brushTool');
     var eraseTool = document.getElementById('eraseTool');
     var undoButton = document.getElementById('undoButton');
@@ -353,3 +353,4 @@
 </script>
 </body>
 </html>
+
